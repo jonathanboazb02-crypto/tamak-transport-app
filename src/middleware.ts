@@ -35,6 +35,10 @@ export default withAuth(
     return NextResponse.next();
   },
   {
+    pages: {
+      signIn: "/login",
+    },
+    secret: process.env.NEXTAUTH_SECRET,
     callbacks: {
       authorized: ({ token }) => !!token, // aucun accès sans compte et sans rôle attribué
     },
