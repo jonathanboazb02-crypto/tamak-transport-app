@@ -3,17 +3,62 @@ import { DataTable } from "@/components/DataTable";
 import { StatCard } from "@/components/StatCard";
 import { EvolutionCarburantChart } from "@/components/charts/EvolutionCarburantChart";
 import { ComparatifVehiculesChart } from "@/components/charts/ComparatifVehiculesChart";
-import { format } from "date-fns";
+import { SelecteurPeriode } from "./SelecteurPeriode";
+import { format, startOfDay, endOfDay, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, parseISO, isValid } from "date-fns";
 import Link from "next/link";
 
-// Accès déjà filtré par le middleware (section 5 : Analyse de données = Direction uniquement)
-export default async function AnalysePage() {
+type Recherche = { periode?: string; debut?: string; fin?: string };
+
+function calculerPlage(recherche: Recherche) {
+  const maintenant = new Date();
+  const periode = recherche.periode || "month";
+
+  if (periode === "today") {
+    return { debut: startOfDay(maintenant), fin: endOfDay(maintenant), label: "Aujourd'hui" };
+  }
+  if (periode === "7days") {
+    return { debut: startOfDay(subDays(maintenant, 6)), fin: endOfDay(maintenant), label: "7 derniers jours" };
+  }
+  if (periode === "week") {
+    return {
+      debut: startOfWeek(maintenant, { weekStartsOn: 1 }),
+      fin: endOfWeek(maintenant, { weekStartsOn: 1 }),
+      label: "Cette semaine",
+    };
+  }
+  if (periode === "month") {
+    return { debut: startOfMonth(maintenant), fin: endOfMonth(maintenant), label: "Ce mois" };
+  }
+  if (periode === "custom" && recherche.debut && recherche.fin) {
+    const d = parseISO(recherche.debut);
+    const f = parseISO(recherche.fin);
+    if (isValid(d) && isValid(f)) {
+      return { debut: startOfDay(d), fin: endOfDay(f), label: `${format(d, "dd/MM/yyyy")} → ${format(f, "dd/MM/yyyy")}` };
+    }
+  }
+  // "all" ou repli par défaut : aucune borne
+  return { debut: new Date(2000, 0, 1), fin: endOfDay(maintenant), label: "Toute la période" };
+}
+
+export default async function AnalysePage({ searchParams }: { searchParams: Recherche }) {
+  const periodeActuelle = searchParams.periode || "month";
+  const { debut, fin, label } = calculerPlage(searchParams);
+
   const [vehicules, tousLesCarburants] = await Promise.all([
-    prisma.vehicule.findMany({ include: { carburant: true, courses: true }, orderBy: { code: "asc" } }),
-    prisma.carburant.findMany({ orderBy: { dateChargement: "asc" } }),
+    prisma.vehicule.findMany({
+      include: {
+        carburant: { where: { dateChargement: { gte: debut, lte: fin } } },
+        courses: { where: { date: { gte: debut, lte: fin } } },
+      },
+      orderBy: { code: "asc" },
+    }),
+    prisma.carburant.findMany({
+      where: { dateChargement: { gte: debut, lte: fin } },
+      orderBy: { dateChargement: "asc" },
+    }),
   ]);
 
-  // Comparatif par véhicule (tableau + graphique) — inclut désormais le revenu et le rendement
+  // Comparatif par véhicule (tableau + graphique) — sur la période sélectionnée
   const comparatif = vehicules.map((v) => {
     const litres = v.carburant.reduce((s, c) => s + c.quantiteLitres, 0);
     const coutCarburant = v.carburant.reduce((s, c) => s + c.montantTotal, 0);
@@ -32,11 +77,12 @@ export default async function AnalysePage() {
     c.courses > 0 ? (c.cout / c.courses).toFixed(2) : "—",
   ]);
 
-  // Totaux globaux (dépenses et revenu réellement enregistrés)
+  // Totaux globaux sur la période
   const revenuTotal = comparatif.reduce((s, c) => s + c.revenu, 0);
   const carburantTotal = comparatif.reduce((s, c) => s + c.cout, 0);
   const nombreCoursesTotal = comparatif.reduce((s, c) => s + c.courses, 0);
   const rendementBrutTotal = revenuTotal - carburantTotal;
+  const pertes = rendementBrutTotal < 0 ? Math.abs(rendementBrutTotal) : 0;
 
   // Répartition théorique du revenu, selon la grille de l'étude de marché TAMAK
   const REPARTITION = [
@@ -45,9 +91,10 @@ export default async function AnalysePage() {
     { rubrique: "Pièces de rechange, pneus, amortissement et bénéfice", part: 0.55, note: "Dépend du taux de change (pour 1$ US)" },
   ];
 
-  // Évolution mensuelle du carburant (regroupement par mois)
+  // Évolution mensuelle du carburant (toujours sur l'historique complet, pour garder la tendance)
+  const tousLesCarburantsHistorique = await prisma.carburant.findMany({ orderBy: { dateChargement: "asc" } });
   const parMois = new Map<string, { litres: number; cout: number }>();
-  for (const c of tousLesCarburants) {
+  for (const c of tousLesCarburantsHistorique) {
     const cle = format(c.dateChargement, "MM/yyyy");
     const existant = parMois.get(cle) ?? { litres: 0, cout: 0 };
     existant.litres += c.quantiteLitres;
@@ -68,31 +115,50 @@ export default async function AnalysePage() {
           Exporter en PDF
         </Link>
       </div>
-      <p className="text-sm text-gray-500">Comparatif par véhicule — revenus, dépenses carburant et rendement.</p>
 
-      {/* Dépenses et rendement réels */}
+      <SelecteurPeriode periode={periodeActuelle} debut={searchParams.debut} fin={searchParams.fin} />
+      <p className="text-sm text-gray-500">
+        Période affichée : <span className="font-semibold text-tamak-navy">{label}</span>
+      </p>
+
+      {/* Dépenses et rendement sur la période */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Revenu total (courses)" value={revenuTotal.toFixed(2)} suffix="USD" />
-        <StatCard label="Dépense carburant totale" value={carburantTotal.toFixed(2)} suffix="USD" />
+        <StatCard label="Revenu (courses)" value={revenuTotal.toFixed(2)} suffix="USD" />
+        <StatCard label="Dépense carburant" value={carburantTotal.toFixed(2)} suffix="USD" />
         <StatCard label="Courses valorisées" value={nombreCoursesTotal} />
-        <StatCard label="Rendement brut (revenu - carburant)" value={rendementBrutTotal.toFixed(2)} suffix="USD" />
+        <StatCard
+          label={rendementBrutTotal < 0 ? "Perte nette" : "Rendement brut"}
+          value={(rendementBrutTotal < 0 ? pertes : rendementBrutTotal).toFixed(2)}
+          suffix="USD"
+        />
       </div>
 
-      <EvolutionCarburantChart donnees={evolution} />
-      <ComparatifVehiculesChart donnees={comparatif.map((c) => ({ vehicule: c.vehicule, courses: c.courses, litres: c.litres, cout: c.cout }))} />
+      <div>
+        <h2 className="font-semibold text-tamak-navy mb-2">Comparatif par véhicule — {label}</h2>
+        {vehicules.length === 0 || nombreCoursesTotal + carburantTotal === 0 ? (
+          <p className="text-sm text-gray-400 bg-white border rounded-xl p-5">Aucune donnée sur cette période.</p>
+        ) : (
+          <>
+            <ComparatifVehiculesChart donnees={comparatif.map((c) => ({ vehicule: c.vehicule, courses: c.courses, litres: c.litres, cout: c.cout }))} />
+            <div className="mt-3">
+              <DataTable
+                colonnes={["Code", "Courses", "Revenu (USD)", "Litres consommés", "Dépense carburant (USD)", "Rendement (USD)", "Coût moyen/course (USD)"]}
+                lignes={lignes}
+              />
+            </div>
+          </>
+        )}
+      </div>
 
       <div>
-        <h2 className="font-semibold text-tamak-navy mb-2">Comparatif par véhicule</h2>
-        <DataTable
-          colonnes={["Code", "Courses", "Revenu (USD)", "Litres consommés", "Dépense carburant (USD)", "Rendement (USD)", "Coût moyen/course (USD)"]}
-          lignes={lignes}
-        />
+        <h2 className="font-semibold text-tamak-navy mb-2">Évolution mensuelle du carburant (historique complet)</h2>
+        <EvolutionCarburantChart donnees={evolution} />
       </div>
 
       <div>
         <h2 className="font-semibold text-tamak-navy mb-2">Répartition théorique du revenu (grille TAMAK)</h2>
         <p className="text-xs text-gray-500 mb-2">
-          Appliquée au revenu total réellement enregistré ci-dessus ({revenuTotal.toFixed(2)} USD).
+          Appliquée au revenu de la période sélectionnée ({revenuTotal.toFixed(2)} USD).
         </p>
         <DataTable
           colonnes={["Rubrique", "Part", "Montant estimé (USD)", "Remarque"]}
@@ -108,7 +174,7 @@ export default async function AnalysePage() {
       <div>
         <h2 className="font-semibold text-tamak-navy mb-2">Repères de l'étude de marché (prévisionnel)</h2>
         <p className="text-xs text-gray-500 mb-2">
-          Chiffres de référence issus de l'étude de marché TAMAK, pour comparaison avec les résultats réels ci-dessus — objectif de 2 véhicules, 100 courses/mois.
+          Chiffres de référence issus de l'étude de marché TAMAK — objectif de 2 véhicules, 100 courses/mois.
         </p>
         <DataTable
           colonnes={["Indicateur", "Valeur de référence"]}
