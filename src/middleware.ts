@@ -23,11 +23,6 @@ export async function middleware(req: NextRequest) {
     secureCookie: true,
   });
 
-  // --- Diagnostic temporaire : à retirer une fois le problème résolu ---
-  console.log("[middleware] secret présent :", !!process.env.NEXTAUTH_SECRET);
-  console.log("[middleware] token décodé :", token);
-  // ----------------------------------------------------------------------
-
   // Aucun accès sans compte et sans rôle attribué
   if (!token) {
     const urlConnexion = new URL("/login", req.url);
