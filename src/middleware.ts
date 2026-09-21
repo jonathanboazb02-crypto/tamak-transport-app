@@ -17,6 +17,11 @@ const ROUTE_MODULE: Record<string, Module> = {
 
 export default withAuth(
   function middleware(req) {
+    // --- Diagnostic temporaire : à retirer une fois le problème résolu ---
+    console.log("[middleware] secret présent :", !!process.env.NEXTAUTH_SECRET);
+    console.log("[middleware] token décodé :", req.nextauth.token);
+    // ----------------------------------------------------------------------
+
     const categorie = req.nextauth.token?.categorie as Categorie | undefined;
     const doitChangerMotDePasse = req.nextauth.token?.doitChangerMotDePasse as boolean | undefined;
     const pathname = req.nextUrl.pathname;
