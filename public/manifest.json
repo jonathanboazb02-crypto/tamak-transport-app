@@ -1,0 +1,16 @@
+{
+  "name": "TAMAK Transport — Application de suivi",
+  "short_name": "TAMAK Transport",
+  "description": "Suivi des véhicules, des courses, du carburant et de l'équipe — Établissement TAMAK Transport",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F7F7F7",
+  "theme_color": "#1F3864",
+  "lang": "fr",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

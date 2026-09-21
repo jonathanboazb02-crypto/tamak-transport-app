@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(circle at top left, rgba(31, 56, 100, 0.06), transparent 45%),
+    radial-gradient(circle at bottom right, rgba(201, 150, 44, 0.08), transparent 50%),
+    #F4F5F7;
+  background-attachment: fixed;
+}
+
+/* Empêche le zoom indésirable sur les champs de saisie mobiles */
+input, select, textarea {
+  font-size: 16px;
+}
+
+@layer components {
+  /* Carte standard avec un peu plus de relief que "bg-white border rounded-xl" */
+  .carte {
+    @apply bg-white rounded-2xl border border-gray-100 shadow-[0_2px_10px_rgba(15,23,42,0.06)];
+  }
+}
+
+/* Styles d'impression pour les fiches exportées en PDF (courses, carburant) */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .fiche-imprimable {
+    padding: 0 !important;
+  }
+  body {
+    background: white !important;
+  }
+  @page {
+    size: A4 landscape;
+    margin: 12mm;
+  }
+}

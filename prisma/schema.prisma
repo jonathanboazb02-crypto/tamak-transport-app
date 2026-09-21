@@ -1,0 +1,220 @@
+// Schéma de base de données — TAMAK Transport
+// Même chaîne technique que SIGISPE : Prisma + PostgreSQL (Neon)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------- Enums ----------
+
+enum Categorie {
+  DIRECTION
+  GESTION
+  CHAUFFEURS
+  TECHNICIENS
+}
+
+enum Sexe {
+  M
+  F
+}
+
+enum StatutVehicule {
+  ACTIF
+  EN_ENTRETIEN
+  HORS_SERVICE
+}
+
+enum StatutChargement {
+  VIDE
+  PLEIN
+}
+
+enum StatutCourse {
+  EN_ATTENTE
+  VALIDEE
+  ANNULEE
+}
+
+// ---------- Modèles ----------
+
+// Compte applicatif (accès sécurisé) — distinct de l'annuaire Employe
+model Utilisateur {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  motDePasse    String
+  role          String    // référence au libellé du Role (ex: "RESPONSABLE_ADMIN_RH_FINANCIER")
+  categorie     Categorie
+  actif         Boolean   @default(true)
+  doitChangerMotDePasse Boolean @default(true)
+  employe       Employe?  @relation(fields: [employeId], references: [id])
+  employeId     String?   @unique
+  derniereConnexion DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  journaux      JournalAcces[]
+}
+
+// Annuaire du personnel (module "Équipe")
+model Employe {
+  id          String     @id @default(cuid())
+  photo       String?
+  nom         String
+  postNom     String?
+  prenom      String
+  sexe        Sexe
+  role        String     // libellé du rôle, ex: "Superviseur des Opérations", "Mécanicien"...
+  categorie   Categorie
+  email       String?
+  telephone   String?
+  numeroPermis      String?  // numéro du permis de conduire (RDC)
+  categoriesPermis  String?  // ex: "B, C1, C, BE, CE"
+  photoPermis       String?  // photo du permis (base64), comme le champ "photo" du visage
+  dateEntree  DateTime?  @default(now())
+  actif       Boolean    @default(true)
+  permisNumero      String?
+  permisCategories  String?  // ex: "B, C1, C, BE, CE"
+  permisPhoto       String?  // image du permis, encodée en base64
+
+  utilisateur Utilisateur?
+  coursesChauffeur    Course[]        @relation("ChauffeurCourses")
+  coursesSuperviseur  Course[]        @relation("SuperviseurCourses")
+  carburantChauffeur  Carburant[]
+  vehiculesAffectes   Vehicule[]      @relation("ChauffeurHabituel")
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+// Catalogue des intitulés de rôles par catégorie (module "Paramètres > Rôles")
+// Simple table de référence utilisée dans les listes déroulantes du module Équipe —
+// ne modifie pas la matrice de permissions (contrôlée dans le code, src/lib/rbac.ts).
+model Role {
+  id        String    @id @default(cuid())
+  nom       String
+  categorie Categorie
+  createdAt DateTime  @default(now())
+
+  @@unique([nom, categorie])
+}
+
+// Registre de la flotte (module "Nos véhicules")
+model Vehicule {
+  id             String          @id @default(cuid())
+  matricule      String          @unique
+  code           String          @unique
+  marque         String?
+  modele         String?
+  capacite       Int?            // nombre de casiers
+  statut         StatutVehicule  @default(ACTIF)
+  photo          String?         // photo du véhicule (base64)
+  gpsTerminalId  String?         // identifiant du terminal X-Moniteur (à brancher — cf. section 7 du cahier des charges)
+
+  chauffeurHabituel   Employe?  @relation("ChauffeurHabituel", fields: [chauffeurHabituelId], references: [id])
+  chauffeurHabituelId String?
+
+  courses        Course[]
+  carburant      Carburant[]
+  positionsGps   PositionGps[]
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+// Module "Suivi des courses" — numérisation de la Fiche des courses
+model Course {
+  id                  String        @id @default(cuid())
+  codeCourse          String        // code du trajet (ex: TAMABUMB26) — réutilisé à chaque course sur ce trajet
+  description         String
+  date                DateTime
+  heure               String
+  statutChargement    StatutChargement
+  statut              StatutCourse  @default(EN_ATTENTE)
+  tarifCdf            Float?
+  tarifUsd            Float?
+
+  chauffeur           Employe       @relation("ChauffeurCourses", fields: [chauffeurId], references: [id])
+  chauffeurId         String
+  vehicule            Vehicule      @relation(fields: [vehiculeId], references: [id])
+  vehiculeId          String
+  superviseur         Employe?      @relation("SuperviseurCourses", fields: [superviseurId], references: [id])
+  superviseurId       String?
+  signatureSuperviseur Boolean      @default(false)
+
+  createdAt           DateTime      @default(now())
+  updatedAt            DateTime     @updatedAt
+}
+
+// Table de référence des trajets (étude de marché) — code, description et tarif
+// utilisés pour remplir automatiquement le formulaire de course.
+model TarifCourse {
+  id          String   @id @default(cuid())
+  codeCourse  String   @unique
+  description String
+  tarifCdf    Float
+  tarifUsd    Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Module "Consommation de carburant" — numérisation de la Fiche carburant
+model Carburant {
+  id               String    @id @default(cuid())
+  vehicule         Vehicule  @relation(fields: [vehiculeId], references: [id])
+  vehiculeId       String
+  chauffeur        Employe?  @relation(fields: [chauffeurId], references: [id])
+  chauffeurId      String?
+  dateChargement   DateTime
+  dateFin          DateTime?
+  quantiteLitres   Float
+  prixLitre        Float
+  montantTotal     Float
+  nombreCourses    Int       @default(0)
+  observations     String?
+  devise           String    @default("USD")
+
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+// Position GPS — alimentée automatiquement une fois l'API X-Moniteur branchée
+model PositionGps {
+  id          String    @id @default(cuid())
+  vehicule    Vehicule  @relation(fields: [vehiculeId], references: [id])
+  vehiculeId  String
+  latitude    Float
+  longitude   Float
+  vitesse     Float?
+  horodatage  DateTime  @default(now())
+}
+
+// Journal d'accès — traçabilité des connexions et actions sensibles
+model JournalAcces {
+  id            String       @id @default(cuid())
+  utilisateur   Utilisateur  @relation(fields: [utilisateurId], references: [id])
+  utilisateurId String
+  action        String
+  details       String?
+  createdAt     DateTime     @default(now())
+}
+
+// Paramètres généraux de l'entreprise (module "Paramètres", section 3.10 du cahier des charges)
+// Une seule ligne existe dans cette table (id fixe "singleton").
+model ParametresEntreprise {
+  id        String   @id @default("singleton")
+  nom       String   @default("Établissement TAMAK")
+  rccm      String   @default("CD/KIN/RCCM 14 A – 7808")
+  idNat     String   @default("Id.nat.01-93-N94301-S")
+  nif       String   @default("A0700219X")
+  adresse   String   @default("Av. Landu 172, Commune de Bumbu – Kinshasa / RD. Congo")
+  email     String   @default("distributeurtamak@gmail.com")
+  devise    String   @default("USD")
+  updatedAt DateTime @updatedAt
+}
