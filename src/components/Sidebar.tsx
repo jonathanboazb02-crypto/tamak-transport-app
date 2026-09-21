@@ -2,26 +2,37 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Categorie, Module, peutLire } from "@/lib/rbac";
 import { Logo } from "./Logo";
 
-const LIENS: { href: string; label: string; module: Module }[] = [
-  { href: "/accueil", label: "Accueil", module: "accueil" },
-  { href: "/dashboard", label: "Tableau de bord", module: "dashboard" },
-  { href: "/vehicules", label: "Nos véhicules", module: "vehicules" },
-  { href: "/carburant", label: "Carburant", module: "carburant" },
-  { href: "/courses", label: "Courses", module: "courses" },
-  { href: "/equipe", label: "Équipe", module: "equipe" },
-  { href: "/analyse", label: "Analyse de données", module: "analyse" },
-  { href: "/utilisateurs", label: "Utilisateurs", module: "utilisateurs" },
-  { href: "/parametres", label: "Paramètres", module: "parametres" },
+const LIENS: { href: string; label: string; module: Module; icone: string }[] = [
+  { href: "/accueil", label: "Accueil", module: "accueil", icone: "🏠" },
+  { href: "/dashboard", label: "Tableau de bord", module: "dashboard", icone: "📊" },
+  { href: "/vehicules", label: "Nos véhicules", module: "vehicules", icone: "🚛" },
+  { href: "/carburant", label: "Carburant", module: "carburant", icone: "⛽" },
+  { href: "/courses", label: "Courses", module: "courses", icone: "🧾" },
+  { href: "/equipe", label: "Équipe", module: "equipe", icone: "👥" },
+  { href: "/analyse", label: "Analyse de données", module: "analyse", icone: "📈" },
+  { href: "/utilisateurs", label: "Utilisateurs", module: "utilisateurs", icone: "🔐" },
+  { href: "/parametres", label: "Paramètres", module: "parametres", icone: "⚙️" },
 ];
 
 export function Sidebar({ categorie }: { categorie: Categorie }) {
   const pathname = usePathname();
   const [ouvert, setOuvert] = useState(false);
   const liensAutorises = LIENS.filter((l) => peutLire(categorie, l.module));
+
+  // Empêche le contenu derrière de défiler quand le tiroir mobile est ouvert
+  useEffect(() => {
+    document.body.style.overflow = ouvert ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [ouvert]);
+
+  // Ferme automatiquement le tiroir quand on change de page
+  useEffect(() => {
+    setOuvert(false);
+  }, [pathname]);
 
   return (
     <>
@@ -31,24 +42,48 @@ export function Sidebar({ categorie }: { categorie: Categorie }) {
           <Logo className="h-8" />
           <span className="font-bold">TAMAK Transport</span>
         </div>
-        <button aria-label="Ouvrir le menu" onClick={() => setOuvert(!ouvert)} className="text-2xl leading-none">
-          {ouvert ? "✕" : "☰"}
+        <button
+          aria-label="Ouvrir le menu"
+          onClick={() => setOuvert(true)}
+          className="text-2xl leading-none w-10 h-10 flex items-center justify-center -mr-2"
+        >
+          ☰
         </button>
       </div>
 
-      {/* Panneau de navigation : colonne fixe sur desktop, tiroir sur mobile */}
+      {/* Fond assombri derrière le tiroir mobile */}
+      <div
+        onClick={() => setOuvert(false)}
+        className={`md:hidden fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${
+          ouvert ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+      />
+
+      {/* Panneau de navigation : colonne fixe sur desktop, tiroir glissant sur mobile */}
       <nav
-        className={`bg-gradient-to-b from-tamak-navy to-[#152238] text-white w-64 md:min-h-screen md:sticky md:top-0 z-20 shadow-xl
-        ${ouvert ? "block" : "hidden"} md:block`}
+        className={`bg-gradient-to-b from-tamak-navy to-[#152238] text-white w-72 md:w-64
+        fixed md:static top-0 left-0 h-full md:h-auto md:min-h-screen md:sticky md:top-0
+        z-50 md:z-20 shadow-xl transition-transform duration-300 ease-out
+        ${ouvert ? "translate-x-0" : "-translate-x-full"} md:translate-x-0
+        overflow-y-auto`}
       >
-        <div className="hidden md:flex items-center gap-3 px-6 py-6 border-b border-white/10">
-          <div className="bg-white/95 rounded-xl p-1.5 shadow-sm">
-            <Logo className="h-8" />
+        <div className="flex items-center justify-between gap-3 px-5 py-5 border-b border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="bg-white/95 rounded-xl p-1.5 shadow-sm">
+              <Logo className="h-8" />
+            </div>
+            <div>
+              <p className="font-bold text-lg leading-tight">TAMAK Transport</p>
+              <p className="text-xs text-white/50">Application de suivi</p>
+            </div>
           </div>
-          <div>
-            <p className="font-bold text-lg leading-tight">TAMAK Transport</p>
-            <p className="text-xs text-white/50">Application de suivi</p>
-          </div>
+          <button
+            aria-label="Fermer le menu"
+            onClick={() => setOuvert(false)}
+            className="md:hidden text-2xl leading-none w-9 h-9 flex items-center justify-center text-white/70"
+          >
+            ✕
+          </button>
         </div>
         <ul className="py-3 px-2">
           {liensAutorises.map((lien) => {
@@ -57,15 +92,15 @@ export function Sidebar({ categorie }: { categorie: Categorie }) {
               <li key={lien.href}>
                 <Link
                   href={lien.href}
-                  onClick={() => setOuvert(false)}
-                  className={`flex items-center gap-2 px-4 py-2.5 mb-0.5 text-sm rounded-lg transition ${
+                  className={`flex items-center gap-3 px-4 py-3.5 md:py-2.5 mb-0.5 text-base md:text-sm rounded-lg transition active:scale-[0.98] ${
                     actif
                       ? "bg-gradient-to-r from-white/15 to-white/5 text-white font-semibold shadow-inner"
                       : "text-white/75 hover:bg-white/10 hover:text-white"
                   }`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full transition-colors ${actif ? "bg-tamak-gold" : "bg-transparent"}`} />
+                  <span className="text-lg md:text-base leading-none">{lien.icone}</span>
                   {lien.label}
+                  {actif && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-tamak-gold" />}
                 </Link>
               </li>
             );
