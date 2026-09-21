@@ -46,6 +46,26 @@ export function PhotoUploader({
     }
   }
 
+  async function retirer() {
+    if (!window.confirm("Retirer cette photo ?")) return;
+    setErreur("");
+    setEnvoi(true);
+    try {
+      const res = await fetch(urlApi, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [champ]: null }),
+      });
+      if (!res.ok) throw new Error();
+      setPhoto(null);
+      router.refresh();
+    } catch {
+      setErreur("Échec de la suppression de la photo.");
+    } finally {
+      setEnvoi(false);
+    }
+  }
+
   const classePhoto = rond
     ? "w-24 h-24 rounded-full object-cover border"
     : "w-full sm:w-48 h-32 object-cover rounded-lg border";
@@ -56,10 +76,17 @@ export function PhotoUploader({
   return (
     <div>
       {photo ? <img src={photo} alt={label} className={classePhoto} /> : <div className={classePlaceholder}>{label}</div>}
-      <label className="mt-2 inline-block text-xs text-tamak-navy underline cursor-pointer">
-        {envoi ? "Envoi en cours..." : `Changer — ${label}`}
-        <input type="file" accept="image/*" onChange={choisir} className="hidden" disabled={envoi} />
-      </label>
+      <div className="flex items-center gap-3 mt-2">
+        <label className="inline-block text-xs text-tamak-navy underline cursor-pointer">
+          {envoi ? "Envoi en cours..." : `Changer — ${label}`}
+          <input type="file" accept="image/*" onChange={choisir} className="hidden" disabled={envoi} />
+        </label>
+        {photo && (
+          <button onClick={retirer} disabled={envoi} className="text-xs text-red-600 underline">
+            Retirer la photo
+          </button>
+        )}
+      </div>
       {erreur && <p className="text-xs text-red-600">{erreur}</p>}
     </div>
   );

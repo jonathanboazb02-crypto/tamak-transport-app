@@ -62,7 +62,14 @@ export function ModifierVehiculeButton({ vehicule, chauffeurs }: { vehicule: Veh
             ) : (
               <div className="w-24 h-16 bg-gray-100 border rounded flex items-center justify-center text-gray-400 text-xs">Photo</div>
             )}
-            <input type="file" accept="image/*" onChange={choisirPhoto} className="text-sm" />
+            <div className="flex flex-col gap-1">
+              <input type="file" accept="image/*" onChange={choisirPhoto} className="text-sm" />
+              {form.photo && (
+                <button type="button" onClick={() => setForm({ ...form, photo: "" })} className="text-xs text-red-600 underline text-left">
+                  Retirer la photo
+                </button>
+              )}
+            </div>
           </div>
           <input required placeholder="Matricule" value={form.matricule}
             onChange={(e) => setForm({ ...form, matricule: e.target.value })}

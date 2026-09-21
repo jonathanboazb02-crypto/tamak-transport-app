@@ -88,6 +88,11 @@ export function EmployeActions({ employe, rolesParCategorie }: { employe: Employ
             <div>
               <label className="text-xs text-gray-500 block mb-1">Photo du visage</label>
               <input type="file" accept="image/*" onChange={choisirPhoto} className="text-sm" />
+              {form.photo && (
+                <button type="button" onClick={() => setForm({ ...form, photo: "" })} className="text-xs text-red-600 underline block mt-1">
+                  Retirer la photo
+                </button>
+              )}
             </div>
           </div>
           <input required placeholder="Nom" value={form.nom}
@@ -140,6 +145,11 @@ export function EmployeActions({ employe, rolesParCategorie }: { employe: Employ
                 <div>
                   <label className="text-xs text-gray-500 block mb-1">Photo du permis (recto)</label>
                   <input type="file" accept="image/*" onChange={choisirPhotoPermis} className="text-sm" />
+                  {form.photoPermis && (
+                    <button type="button" onClick={() => setForm({ ...form, photoPermis: "" })} className="text-xs text-red-600 underline block mt-1">
+                      Retirer la photo
+                    </button>
+                  )}
                 </div>
               </div>
             </>
