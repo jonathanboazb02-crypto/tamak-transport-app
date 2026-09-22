@@ -19,6 +19,23 @@ input, select, textarea {
   font-size: 16px;
 }
 
+/* Mode sombre : inverse toutes les couleurs de l'interface (le blanc devient noir
+   et inversement), puis ré-inverse les images/photos pour qu'elles gardent leurs
+   couleurs naturelles au lieu d'apparaître en négatif. */
+html.mode-sombre {
+  filter: invert(1) hue-rotate(180deg);
+  background: #fff;
+}
+html.mode-sombre img,
+html.mode-sombre svg,
+html.mode-sombre video,
+html.mode-sombre iframe,
+html.mode-sombre .leaflet-tile,
+html.mode-sombre .leaflet-marker-icon,
+html.mode-sombre .leaflet-marker-shadow {
+  filter: invert(1) hue-rotate(180deg);
+}
+
 @layer components {
   /* Carte standard avec un peu plus de relief que "bg-white border rounded-xl" */
   .carte {

@@ -11,11 +11,12 @@ type Parametres = {
   adresse: string;
   email: string;
   devise: string;
+  tauxChangeCdf: number;
 };
 
 export function ParametresForm({ parametres }: { parametres: Parametres }) {
   const router = useRouter();
-  const [form, setForm] = useState(parametres);
+  const [form, setForm] = useState({ ...parametres, tauxChangeCdf: String(parametres.tauxChangeCdf) });
   const [enregistre, setEnregistre] = useState(false);
   const [erreur, setErreur] = useState("");
 
@@ -26,7 +27,7 @@ export function ParametresForm({ parametres }: { parametres: Parametres }) {
     const res = await fetch("/api/parametres", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, tauxChangeCdf: Number(form.tauxChangeCdf) || 2270 }),
     });
     if (!res.ok) {
       setErreur("Impossible d'enregistrer les paramètres.");
@@ -75,12 +76,27 @@ export function ParametresForm({ parametres }: { parametres: Parametres }) {
       </div>
 
       <div>
-        <h2 className="font-semibold mb-3">Devise du suivi carburant</h2>
-        <select value={form.devise} onChange={(e) => setForm({ ...form, devise: e.target.value })}
-          className="border rounded-lg px-3 py-2 text-sm">
-          <option value="USD">USD</option>
-          <option value="CDF">CDF</option>
-        </select>
+        <h2 className="font-semibold mb-3">Devise et taux de change</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label className="text-sm">
+            Devise principale
+            <select value={form.devise} onChange={(e) => setForm({ ...form, devise: e.target.value })}
+              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm">
+              <option value="CDF">CDF (Franc Congolais)</option>
+              <option value="USD">USD</option>
+            </select>
+          </label>
+          <label className="text-sm">
+            Taux de change (1 USD = ? CDF)
+            <input type="number" step="0.01" value={form.tauxChangeCdf}
+              onChange={(e) => setForm({ ...form, tauxChangeCdf: e.target.value })}
+              className="mt-1 w-full border rounded-lg px-3 py-2 text-sm" />
+          </label>
+        </div>
+        <p className="text-xs text-gray-400 mt-2">
+          Ce taux sert à convertir automatiquement les montants (courses, carburant, analyse) entre USD et CDF
+          partout dans l'application. Mets-le à jour quand le taux du marché change.
+        </p>
       </div>
 
       {erreur && <p className="text-red-600 text-sm">{erreur}</p>}

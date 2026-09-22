@@ -215,6 +215,7 @@ model ParametresEntreprise {
   nif       String   @default("A0700219X")
   adresse   String   @default("Av. Landu 172, Commune de Bumbu – Kinshasa / RD. Congo")
   email     String   @default("distributeurtamak@gmail.com")
-  devise    String   @default("USD")
+  devise    String   @default("CDF")
+  tauxChangeCdf Float @default(2270) // 1 USD = X CDF — modifiable dans Paramètres
   updatedAt DateTime @updatedAt
 }

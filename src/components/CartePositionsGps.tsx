@@ -48,7 +48,7 @@ export function CartePositionsGps() {
     positionsValides.length > 0 ? [positionsValides[0].lat!, positionsValides[0].lng!] : KINSHASA;
 
   return (
-    <div className="rounded-xl overflow-hidden border" style={{ height: 350 }}>
+    <div className="isolate relative z-0 rounded-xl overflow-hidden border" style={{ height: 350 }}>
       <MapContainer center={centre} zoom={12} style={{ height: "100%", width: "100%" }}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'

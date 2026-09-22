@@ -10,6 +10,7 @@ export function LoginForm() {
   const [motDePasse, setMotDePasse] = useState("");
   const [erreur, setErreur] = useState("");
   const [chargement, setChargement] = useState(false);
+  const [voir, setVoir] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,14 +48,24 @@ export function LoginForm() {
       </div>
       <div>
         <label className="block text-sm font-medium mb-1">Mot de passe</label>
-        <input
-          type="password"
-          required
-          value={motDePasse}
-          onChange={(e) => setMotDePasse(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-tamak-navy"
-          placeholder="••••••••"
-        />
+        <div className="relative">
+          <input
+            type={voir ? "text" : "password"}
+            required
+            value={motDePasse}
+            onChange={(e) => setMotDePasse(e.target.value)}
+            className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-tamak-navy"
+            placeholder="••••••••"
+          />
+          <button
+            type="button"
+            onClick={() => setVoir(!voir)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-tamak-navy text-xs font-medium"
+            tabIndex={-1}
+          >
+            {voir ? "Masquer" : "Voir"}
+          </button>
+        </div>
       </div>
       {erreur && <p className="text-red-600 text-sm">{erreur}</p>}
       <button

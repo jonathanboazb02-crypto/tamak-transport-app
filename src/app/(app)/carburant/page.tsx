@@ -3,6 +3,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { DataTable } from "@/components/DataTable";
 import { StatCard } from "@/components/StatCard";
+import { StatCardDevise } from "@/components/StatCardDevise";
+import { MontantDevise } from "@/components/MontantDevise";
 import { AjoutCarburantForm } from "./AjoutCarburantForm";
 import { CarburantActions } from "./CarburantActions";
 import { Categorie, peutEcrire } from "@/lib/rbac";
@@ -35,8 +37,8 @@ export default async function CarburantPage({ searchParams }: { searchParams: { 
     format(e.dateChargement, "dd/MM/yyyy"),
     e.dateFin ? format(e.dateFin, "dd/MM/yyyy") : "—",
     e.quantiteLitres.toFixed(1),
-    e.prixLitre.toFixed(2),
-    e.montantTotal.toFixed(2),
+    <MontantDevise key={`prix-${e.id}`} valeurUsd={e.prixLitre} />,
+    <MontantDevise key={`montant-${e.id}`} valeurUsd={e.montantTotal} />,
     e.nombreCourses,
     e.observations ?? "—",
     autorise ? (
@@ -83,11 +85,11 @@ export default async function CarburantPage({ searchParams }: { searchParams: { 
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <StatCard label="Total consommé" value={totalLitres.toFixed(0)} suffix="L" />
-        <StatCard label="Coût total" value={totalCout.toFixed(2)} suffix="USD" />
-        <StatCard label="Prix moyen / litre" value={prixMoyen.toFixed(2)} suffix="USD" />
+        <StatCardDevise label="Coût total" valeurUsd={totalCout} />
+        <StatCardDevise label="Prix moyen / litre" valeurUsd={prixMoyen} />
         <StatCard label="Nombre total de courses" value={totalCourses} />
         <StatCard label="Consommation moy. / course" value={consoMoyenneParCourse.toFixed(1)} suffix="L" />
-        <StatCard label="Coût moyen / course" value={coutMoyenParCourse.toFixed(2)} suffix="USD" />
+        <StatCardDevise label="Coût moyen / course" valeurUsd={coutMoyenParCourse} />
       </div>
 
       <DataTable

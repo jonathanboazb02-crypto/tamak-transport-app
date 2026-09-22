@@ -1,6 +1,8 @@
 "use client";
 
 import { signOut } from "next-auth/react";
+import { ToggleModeSombre } from "./ToggleModeSombre";
+import { ToggleDevise } from "./ToggleDevise";
 
 export function Topbar({ nom, role }: { nom: string; role: string }) {
   return (
@@ -9,11 +11,13 @@ export function Topbar({ nom, role }: { nom: string; role: string }) {
         <span className="w-1.5 h-1.5 rounded-full bg-tamak-gold" />
         {role}
       </div>
-      <div className="flex items-center gap-3 ml-auto">
+      <div className="flex items-center gap-2 md:gap-3 ml-auto">
+        <ToggleDevise />
+        <ToggleModeSombre />
         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-tamak-navy to-[#2C4A80] text-white flex items-center justify-center text-xs font-semibold">
           {nom.charAt(0).toUpperCase()}
         </div>
-        <span className="text-sm font-medium">{nom}</span>
+        <span className="text-sm font-medium hidden sm:inline">{nom}</span>
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
           className="text-sm text-tamak-navy border border-tamak-navy/30 rounded-lg px-3 py-1.5 hover:bg-tamak-navy hover:text-white hover:shadow-md transition-all"

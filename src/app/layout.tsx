@@ -22,6 +22,13 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try { if (localStorage.getItem('tamak-mode-sombre') === '1') { document.documentElement.classList.add('mode-sombre'); } } catch (e) {}`,
+          }}
+        />
+      </head>
       <body className="bg-tamak-light text-tamak-dark antialiased">
         {children}
         <RegisterServiceWorker />

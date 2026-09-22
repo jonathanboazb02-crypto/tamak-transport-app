@@ -44,14 +44,6 @@ export default async function ParametresPage() {
         )}
       </div>
 
-      <div className="bg-white rounded-xl border p-5">
-        <h2 className="font-semibold mb-1">Permissions par module</h2>
-        <p className="text-sm text-gray-500">
-          Qui peut lire/modifier chaque module (Direction, Gestion, Chauffeurs, Techniciens) est fixé dans le code
-          de l'application (src/lib/rbac.ts), pour des raisons de sécurité et de fiabilité technique. Pour changer
-          une permission, demande la modification — c'est une intervention rapide et sûre.
-        </p>
-      </div>
     </div>
   );
 }

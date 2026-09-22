@@ -34,6 +34,7 @@ export async function PATCH(req: NextRequest) {
       adresse: body.adresse,
       email: body.email,
       devise: body.devise,
+      tauxChangeCdf: body.tauxChangeCdf,
     },
     create: { id: "singleton", ...body },
   });

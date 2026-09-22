@@ -63,7 +63,7 @@ export function Sidebar({ categorie }: { categorie: Categorie }) {
       <nav
         className={`bg-gradient-to-b from-tamak-navy to-[#152238] text-white w-72 md:w-64
         fixed md:static top-0 left-0 h-full md:h-auto md:min-h-screen md:sticky md:top-0
-        z-50 md:z-20 shadow-xl transition-transform duration-300 ease-out
+        z-[100] md:z-30 shadow-xl transition-transform duration-300 ease-out
         ${ouvert ? "translate-x-0" : "-translate-x-full"} md:translate-x-0
         overflow-y-auto`}
       >

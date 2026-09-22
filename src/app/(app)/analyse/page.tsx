@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { DataTable } from "@/components/DataTable";
 import { StatCard } from "@/components/StatCard";
+import { StatCardDevise } from "@/components/StatCardDevise";
+import { MontantDevise } from "@/components/MontantDevise";
 import { EvolutionCarburantChart } from "@/components/charts/EvolutionCarburantChart";
 import { ComparatifVehiculesChart } from "@/components/charts/ComparatifVehiculesChart";
 import { SelecteurPeriode } from "./SelecteurPeriode";
@@ -67,14 +69,14 @@ export default async function AnalysePage({ searchParams }: { searchParams: Rech
     return { vehicule: v.code, litres, cout: coutCarburant, courses: nbCourses, revenu, rendement: revenu - coutCarburant };
   });
 
-  const lignes = comparatif.map((c) => [
+  const lignes = comparatif.map((c, i) => [
     c.vehicule,
     c.courses,
-    c.revenu.toFixed(2),
+    <MontantDevise key={`revenu-${i}`} valeurUsd={c.revenu} />,
     c.litres.toFixed(0),
-    c.cout.toFixed(2),
-    c.rendement.toFixed(2),
-    c.courses > 0 ? (c.cout / c.courses).toFixed(2) : "—",
+    <MontantDevise key={`cout-${i}`} valeurUsd={c.cout} />,
+    <MontantDevise key={`rendement-${i}`} valeurUsd={c.rendement} />,
+    c.courses > 0 ? <MontantDevise key={`moy-${i}`} valeurUsd={c.cout / c.courses} /> : "—",
   ]);
 
   // Totaux globaux sur la période
@@ -123,13 +125,12 @@ export default async function AnalysePage({ searchParams }: { searchParams: Rech
 
       {/* Dépenses et rendement sur la période */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Revenu (courses)" value={revenuTotal.toFixed(2)} suffix="USD" />
-        <StatCard label="Dépense carburant" value={carburantTotal.toFixed(2)} suffix="USD" />
+        <StatCardDevise label="Revenu (courses)" valeurUsd={revenuTotal} />
+        <StatCardDevise label="Dépense carburant" valeurUsd={carburantTotal} />
         <StatCard label="Courses valorisées" value={nombreCoursesTotal} />
-        <StatCard
+        <StatCardDevise
           label={rendementBrutTotal < 0 ? "Perte nette" : "Rendement brut"}
-          value={(rendementBrutTotal < 0 ? pertes : rendementBrutTotal).toFixed(2)}
-          suffix="USD"
+          valeurUsd={rendementBrutTotal < 0 ? pertes : rendementBrutTotal}
         />
       </div>
 
@@ -158,14 +159,14 @@ export default async function AnalysePage({ searchParams }: { searchParams: Rech
       <div>
         <h2 className="font-semibold text-tamak-navy mb-2">Répartition théorique du revenu (grille TAMAK)</h2>
         <p className="text-xs text-gray-500 mb-2">
-          Appliquée au revenu de la période sélectionnée ({revenuTotal.toFixed(2)} USD).
+          Appliquée au revenu de la période sélectionnée (<MontantDevise valeurUsd={revenuTotal} />).
         </p>
         <DataTable
-          colonnes={["Rubrique", "Part", "Montant estimé (USD)", "Remarque"]}
-          lignes={REPARTITION.map((r) => [
+          colonnes={["Rubrique", "Part", "Montant estimé", "Remarque"]}
+          lignes={REPARTITION.map((r, i) => [
             r.rubrique,
             `${(r.part * 100).toFixed(0)}%`,
-            (revenuTotal * r.part).toFixed(2),
+            <MontantDevise key={`repartition-${i}`} valeurUsd={revenuTotal * r.part} />,
             r.note,
           ])}
         />

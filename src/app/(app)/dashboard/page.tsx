@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { StatCard } from "@/components/StatCard";
+import { StatCardDevise } from "@/components/StatCardDevise";
 import { PositionsGpsLive } from "@/components/PositionsGpsLive";
 import { CarteGpsWrapper } from "@/components/CarteGpsWrapper";
 import { startOfMonth } from "date-fns";
@@ -24,7 +25,7 @@ export default async function DashboardPage() {
         <StatCard label="Véhicules actifs" value={vehiculesActifs} />
         <StatCard label="Courses ce mois" value={coursesDuMois} />
         <StatCard label="Carburant ce mois" value={(carburantDuMois._sum.quantiteLitres ?? 0).toFixed(0)} suffix="L" />
-        <StatCard label="Coût carburant ce mois" value={(carburantDuMois._sum.montantTotal ?? 0).toFixed(2)} suffix="USD" />
+        <StatCardDevise label="Coût carburant ce mois" valeurUsd={carburantDuMois._sum.montantTotal ?? 0} />
       </div>
 
       <div className="bg-white rounded-xl border p-5 space-y-4">

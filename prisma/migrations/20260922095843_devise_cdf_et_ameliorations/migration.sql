@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "ParametresEntreprise" ADD COLUMN     "tauxChangeCdf" DOUBLE PRECISION NOT NULL DEFAULT 2270,
+ALTER COLUMN "devise" SET DEFAULT 'CDF';

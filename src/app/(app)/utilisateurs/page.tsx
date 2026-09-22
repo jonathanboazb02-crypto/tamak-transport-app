@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { DataTable } from "@/components/DataTable";
 import { CreerCompteForm } from "./CreerCompteForm";
-import { ToggleCompteButton } from "./ToggleCompteButton";
+import { UtilisateurActions } from "./UtilisateurActions";
 import { format } from "date-fns";
 
 // L'accès à cette page est déjà filtré par le middleware (section 5 : Utilisateurs = Direction uniquement)
@@ -12,13 +12,16 @@ export default async function UtilisateursPage() {
   ]);
 
   const lignes = utilisateurs.map((u) => [
-    u.employe ? `${u.employe.prenom} ${u.employe.nom}` : "—",
+    u.employe ? `${u.employe.prenom} ${u.employe.nom}` : "— (aucun membre lié)",
     u.email,
     u.role,
     u.categorie,
     u.actif ? "Actif" : "Désactivé",
     u.derniereConnexion ? format(u.derniereConnexion, "dd/MM/yyyy HH:mm") : "Jamais connecté",
-    <ToggleCompteButton key={u.id} id={u.id} actif={u.actif} />,
+    <UtilisateurActions
+      key={u.id}
+      utilisateur={{ id: u.id, email: u.email, role: u.role, categorie: u.categorie, actif: u.actif }}
+    />,
   ]);
 
   return (
