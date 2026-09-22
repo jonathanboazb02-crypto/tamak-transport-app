@@ -19,7 +19,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         codeCourse: body.codeCourse,
         description: body.description,
         date: new Date(body.date),
-        heure: body.heure,
+        heure: body.heure || null,
         statutChargement: body.statutChargement,
         vehiculeId: body.vehiculeId,
         chauffeurId: body.chauffeurId,

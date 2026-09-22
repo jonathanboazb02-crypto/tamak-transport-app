@@ -108,7 +108,7 @@ export function CourseActions({ course, vehicules, chauffeurs }: { course: Cours
           <input required type="date" value={form.date}
             onChange={(e) => setForm({ ...form, date: e.target.value })}
             className="border rounded-lg px-3 py-2 text-sm" />
-          <input required type="time" value={form.heure}
+          <input type="time" value={form.heure}
             onChange={(e) => setForm({ ...form, heure: e.target.value })}
             className="border rounded-lg px-3 py-2 text-sm" />
           <select value={form.statutChargement} onChange={(e) => setForm({ ...form, statutChargement: e.target.value })}

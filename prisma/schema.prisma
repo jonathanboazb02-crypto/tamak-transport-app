@@ -134,7 +134,7 @@ model Course {
   codeCourse          String        // code du trajet (ex: TAMABUMB26) — réutilisé à chaque course sur ce trajet
   description         String
   date                DateTime
-  heure               String
+  heure               String?
   statutChargement    StatutChargement
   statut              StatutCourse  @default(EN_ATTENTE)
   tarifCdf            Float?

@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
       codeCourse: body.codeCourse,
       description: body.description,
       date: new Date(body.date),
-      heure: body.heure,
+      heure: body.heure || null,
       statutChargement: body.statutChargement,
       chauffeurId: body.chauffeurId,
       vehiculeId: body.vehiculeId,

@@ -40,7 +40,7 @@ export default async function ImprimerCoursesPage() {
               <td className="border border-gray-400 px-2 py-1.5">{c.codeCourse}</td>
               <td className="border border-gray-400 px-2 py-1.5">{c.description}</td>
               <td className="border border-gray-400 px-2 py-1.5">{format(c.date, "dd/MM/yyyy")}</td>
-              <td className="border border-gray-400 px-2 py-1.5">{c.heure}</td>
+              <td className="border border-gray-400 px-2 py-1.5">{c.heure ?? "—"}</td>
               <td className="border border-gray-400 px-2 py-1.5">{c.statutChargement}</td>
               <td className="border border-gray-400 px-2 py-1.5">{c.chauffeur.prenom} {c.chauffeur.nom}</td>
               <td className="border border-gray-400 px-2 py-1.5">{c.vehicule.code}</td>
